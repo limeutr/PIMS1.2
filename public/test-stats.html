@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .stats { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .test-btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        .test-btn:hover { background: #0056b3; }
+        #log { background: #333; color: #0f0; padding: 15px; font-family: monospace; max-height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>Production Tracking Stats Test</h1>
+    
+    <div class="stats">
+        <h3>Current Stats</h3>
+        <p>Today's Inbound: <span id="todayInbound">0</span></p>
+        <p>Today's Outbound: <span id="todayOutbound">0</span></p>
+        <p>Total Production: <span id="totalProduction">0</span></p>
+        <p>Items Shipped: <span id="itemsShipped">0</span></p>
+    </div>
+    
+    <div>
+        <button class="test-btn" onclick="testUpdateStats()">Test Update Stats</button>
+        <button class="test-btn" onclick="testAPI()">Test API Direct</button>
+        <button class="test-btn" onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div id="log"></div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        async function testAPI() {
+            try {
+                log('Testing API direct...');
+                const response = await fetch('/production-tracking');
+                const data = await response.json();
+                log('API Response: ' + JSON.stringify(data, null, 2));
+                
+                const testResponse = await fetch('/test-stats');
+                const testData = await testResponse.json();
+                log('Test Stats: ' + JSON.stringify(testData, null, 2));
+            } catch (error) {
+                log('API Error: ' + error.message);
+            }
+        }
+        
+        async function testUpdateStats() {
+            try {
+                log('Testing updateStats function...');
+                
+                // Inline version of updateStats
+                const response = await fetch('/production-tracking');
+                const data = await response.json();
+                log('Got ' + data.length + ' entries from API');
+                
+                const testDate = '2025-07-22';
+                const todayEntries = data.filter(entry => {
+                    const entryDate = new Date(entry.timestamp).toISOString().split('T')[0];
+                    return entryDate === testDate;
+                });
+                
+                log('Filtered to ' + todayEntries.length + ' entries for ' + testDate);
+                
+                const todayInbound = todayEntries.filter(entry => entry.type === 'inbound').length;
+                const todayOutbound = todayEntries.filter(entry => entry.type === 'outbound').length;
+                const totalProduction = todayEntries.filter(entry => entry.type === 'inbound').reduce((sum, entry) => sum + parseFloat(entry.quantity || 0), 0);
+                const itemsShipped = todayEntries.filter(entry => entry.type === 'outbound').reduce((sum, entry) => sum + parseFloat(entry.quantity || 0), 0);
+                
+                log('Calculated stats: In=' + todayInbound + ', Out=' + todayOutbound + ', Prod=' + totalProduction + ', Ship=' + itemsShipped);
+                
+                // Update elements
+                document.getElementById('todayInbound').textContent = todayInbound;
+                document.getElementById('todayOutbound').textContent = todayOutbound;
+                document.getElementById('totalProduction').textContent = Math.round(totalProduction);
+                document.getElementById('itemsShipped').textContent = Math.round(itemsShipped);
+                
+                log('✅ Stats updated successfully!');
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // Auto-run test on load
+        window.addEventListener('load', () => {
+            log('Test page loaded. Click "Test Update Stats" to run the stats update.');
+        });
+    </script>
+</body>
+</html>

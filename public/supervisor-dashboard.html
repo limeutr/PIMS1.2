@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAU Inventory - Supervisor Dashboard</title>
+    <link rel="stylesheet" href="supervisor-dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo" onclick="goToDashboard()" style="cursor: pointer;" title="Go to Dashboard">
+                    <h1>PAU Inventory</h1>
+                    <span>Supervisor Dashboard</span>
+                </div>
+                <div class="user-info">
+                    <span class="role-badge supervisor">Supervisor</span>
+                    <span id="welcomeMessage">Welcome, Supervisor!</span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="dashboard-grid">
+                <!-- Key Performance Metrics -->
+                <section class="kpi-section">
+                    <h2>Key Performance Indicators</h2>
+                    <div class="kpi-grid">
+                        <div class="kpi-card revenue">
+                            <div class="kpi-icon">💰</div>
+                            <div class="kpi-info">
+                                <h3>Total Revenue</h3>
+                                <p class="kpi-value">$125,450</p>
+                                <span class="kpi-trend positive">+12.5%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card profit">
+                            <div class="kpi-icon">📈</div>
+                            <div class="kpi-info">
+                                <h3>Net Profit</h3>
+                                <p class="kpi-value">$28,900</p>
+                                <span class="kpi-trend positive">+8.3%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card wastage">
+                            <div class="kpi-icon">🗑️</div>
+                            <div class="kpi-info">
+                                <h3>Wastage Cost</h3>
+                                <p class="kpi-value">$2,150</p>
+                                <span class="kpi-trend negative">+15.2%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card efficiency">
+                            <div class="kpi-icon">⚡</div>
+                            <div class="kpi-info">
+                                <h3>Efficiency</h3>
+                                <p class="kpi-value">87.5%</p>
+                                <span class="kpi-trend positive">+3.1%</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Stock Summary -->
+                <section class="stock-section">
+                    <h2>Stock Summary</h2>
+                    <div class="stock-grid">
+                        <div class="stock-card">
+                            <div class="stock-header">
+                                <h3>Total Inventory Value</h3>
+                                <span class="stock-value">$45,200</span>
+                            </div>
+                            <div class="stock-breakdown">
+                                <div class="stock-item">
+                                    <span>Raw Ingredients</span>
+                                    <span>$32,800</span>
+                                </div>
+                                <div class="stock-item">
+                                    <span>Finished PAU Products</span>
+                                    <span>$12,400</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stock-alerts">
+                            <h3>Stock Alerts</h3>
+                            <div class="alert-list">
+                                <!-- Alerts will be populated dynamically -->
+                                <div class="loading-alerts">
+                                    <p>Loading alerts...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sales Analytics -->
+                <section class="analytics-section">
+                    <div class="section-header">
+                        <h2>Sales & Analytics</h2>
+                        <button onclick="openSalesAnalytics()" class="view-details-btn">📊 View Detailed Analytics</button>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="chart-container">
+                            <h3>Monthly Sales Trend</h3>
+                            <div class="chart-placeholder">
+                                <div class="chart-bars">
+                                    <div class="bar" style="height: 60%;" data-value="$18.5k"></div>
+                                    <div class="bar" style="height: 75%;" data-value="$22.3k"></div>
+                                    <div class="bar" style="height: 85%;" data-value="$28.1k"></div>
+                                    <div class="bar" style="height: 90%;" data-value="$31.2k"></div>
+                                    <div class="bar" style="height: 100%;" data-value="$35.8k"></div>
+                                    <div class="bar" style="height: 95%;" data-value="$33.1k"></div>
+                                </div>
+                                <div class="chart-labels">
+                                    <span>Jan</span>
+                                    <span>Feb</span>
+                                    <span>Mar</span>
+                                    <span>Apr</span>
+                                    <span>May</span>
+                                    <span>Jun</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="top-products">
+                            <h3>Top Selling Products</h3>
+                            <div class="product-list">
+                                <div class="product-item">
+                                    <span class="product-rank">1</span>
+                                    <div class="product-info">
+                                        <strong>Classic Pau</strong>
+                                        <p>1,450 units sold</p>
+                                    </div>
+                                    <span class="product-revenue">$5,075</span>
+                                </div>
+                                <div class="product-item">
+                                    <span class="product-rank">2</span>
+                                    <div class="product-info">
+                                        <strong>Char Siew Pau</strong>
+                                        <p>980 units sold</p>
+                                    </div>
+                                    <span class="product-revenue">$4,410</span>
+                                </div>
+                                <div class="product-item">
+                                    <span class="product-rank">3</span>
+                                    <div class="product-info">
+                                        <strong>Lotus Bao</strong>
+                                        <p>720 units sold</p>
+                                    </div>
+                                    <span class="product-revenue">$3,600</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Management Tools -->
+                <section class="management-section">
+                    <h2>Management Tools</h2>
+                    <div class="tools-grid">
+                        <button class="tool-btn" onclick="openInventoryManagement()">
+                            <span class="tool-icon">📦</span>
+                            <div class="tool-info">
+                                <strong>Inventory Management</strong>
+                                <p>Add, edit, and track all inventory items</p>
+                            </div>
+                        </button>
+                        
+                        <button class="tool-btn" onclick="openProductionTracking()">
+                            <span class="tool-icon">📋</span>
+                            <div class="tool-info">
+                                <strong>Production Tracking</strong>
+                                <p>Monitor inbound and outbound production</p>
+                            </div>
+                        </button>
+                        
+                        <button class="tool-btn" onclick="openSupplyRequest()">
+                            <span class="tool-icon">📝</span>
+                            <div class="tool-info">
+                                <strong>Supply Request</strong>
+                                <p>Request supplies and manage supply orders</p>
+                            </div>
+                        </button>
+                        
+                        <button class="tool-btn" onclick="openWastageLogging()">
+                            <span class="tool-icon">🗑️</span>
+                            <div class="tool-info">
+                                <strong>Wastage Logging</strong>
+                                <p>Track and analyze wastage for factory and outlets</p>
+                            </div>
+                        </button>
+                        
+                        <button class="tool-btn" onclick="openStaffManagement()">
+                            <span class="tool-icon">👥</span>
+                            <div class="tool-info">
+                                <strong>Staff Management</strong>
+                                <p>Manage staff accounts and permissions</p>
+                            </div>
+                        </button>
+                        
+                        <button class="tool-btn" onclick="openReportIssue()">
+                            <span class="tool-icon">🔧</span>
+                            <div class="tool-info">
+                                <strong>Report Issue</strong>
+                                <p>Report and manage equipment or operational issues</p>
+                            </div>
+                        </button>
+                        
+                        <button class="tool-btn" onclick="generateReport()">
+                            <span class="tool-icon">📊</span>
+                            <div class="tool-info">
+                                <strong>Generate Reports</strong>
+                                <p>Create detailed financial and operational reports</p>
+                            </div>
+                        </button>
+                        
+                        <button class="tool-btn" onclick="openSettings()">
+                            <span class="tool-icon">⚙️</span>
+                            <div class="tool-info">
+                                <strong>System Settings</strong>
+                                <p>Configure system preferences and alerts</p>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <script src="supervisor-dashboard.js"></script>
+</body>
+</html>

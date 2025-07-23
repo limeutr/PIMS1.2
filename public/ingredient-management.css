@@ -59,6 +59,17 @@ body {
     font-weight: bold;
 }
 
+/* Role-specific badge colors */
+.role-badge.supervisor {
+    background: #28a745;
+    color: white;
+}
+
+.role-badge.staff {
+    background: #17a2b8;
+    color: white;
+}
+
 .back-btn, .logout-btn {
     background: rgba(255,255,255,0.2);
     border: 1px solid rgba(255,255,255,0.3);

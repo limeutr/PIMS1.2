@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAU Inventory - Wastage Logging</title>
+    <link rel="stylesheet" href="wastage-logging.css">
+</head>
+<body>
+    <div class="wastage-container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo" onclick="goBackToDashboard()" style="cursor: pointer;" title="Return to Dashboard">
+                    <h1>PAU Inventory</h1>
+                    <span>Wastage Logging</span>
+                </div>
+                <div class="user-info">
+                    <span class="role-badge" id="userRoleBadge">Admin</span>
+                    <span id="welcomeMessage">Welcome, Admin!</span>
+                    <button onclick="goBackToDashboard()" class="back-btn">Back to Dashboard</button>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Quick Stats Section -->
+            <section class="stats-section">
+                <div class="stats-header">
+                    <h2>📊 Today's Wastage Statistics</h2>
+                    <div class="stats-meta">
+                        <span class="last-updated">Last updated: <span id="lastUpdated">Loading...</span></span>
+                        <button class="refresh-btn" onclick="refreshStats()" title="Refresh Statistics">
+                            🔄
+                        </button>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card today-wastage">
+                        <div class="stat-icon">🗑️</div>
+                        <div class="stat-info">
+                            <h3>Today's Wastage</h3>
+                            <p class="stat-number" id="todayWastage">0</p>
+                            <span class="stat-label">items</span>
+                        </div>
+                    </div>
+                    <div class="stat-card factory-wastage">
+                        <div class="stat-icon">🏭</div>
+                        <div class="stat-info">
+                            <h3>Factory Wastage</h3>
+                            <p class="stat-number" id="factoryWastage">0</p>
+                            <span class="stat-label">today</span>
+                        </div>
+                    </div>
+                    <div class="stat-card outlet-wastage">
+                        <div class="stat-icon">🏪</div>
+                        <div class="stat-info">
+                            <h3>Outlet Wastage</h3>
+                            <p class="stat-number" id="outletWastage">0</p>
+                            <span class="stat-label">today</span>
+                        </div>
+                    </div>
+                    <div class="stat-card total-value" id="totalValueCard">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <h3>Total Value Lost</h3>
+                            <p class="stat-number" id="totalValueLost">$0</p>
+                            <span class="stat-label">today</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Wastage Entry Section -->
+            <section class="entry-section">
+                <div class="section-header">
+                    <h2>🗑️ Log Wastage Entry</h2>
+                    <button id="toggleFormBtn" class="log-wastage-btn" onclick="toggleWastageForm()">
+                        📝 Log Wastage Entry
+                    </button>
+                </div>
+
+                <div id="wastageFormSection" class="entry-form-section" style="display: none;">
+                    <div class="form-section-header">
+                        <h3>Log Wastage Entry</h3>
+                        <div class="location-tabs">
+                            <button class="tab-btn active" data-location="factory" onclick="switchLocation('factory')">
+                                🏭 Factory Wastage
+                            </button>
+                            <button class="tab-btn" data-location="outlet" onclick="switchLocation('outlet')">
+                                🏪 Outlet Wastage
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="entry-form-container">
+                    <form id="wastageForm" class="wastage-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="itemSelect">Select Item *</label>
+                                <select id="itemSelect" name="itemSelect" required>
+                                    <option value="">Choose an inventory item...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="quantity">Quantity Wasted *</label>
+                                <input type="number" id="quantity" name="quantity" min="0.01" step="0.01" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="wasteDate">Date *</label>
+                                <input type="date" id="wasteDate" name="wasteDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="wasteTime">Time *</label>
+                                <input type="time" id="wasteTime" name="wasteTime" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row" id="outletDetails" style="display: none;">
+                            <div class="form-group">
+                                <label for="outletLocation">Outlet Location *</label>
+                                <select id="outletLocation" name="outletLocation">
+                                    <option value="">Select outlet...</option>
+                                    <option value="pau_central_outlet">PAU Central Outlet</option>
+                                    <option value="downtown_pau_branch">Downtown PAU Branch</option>
+                                    <option value="shopping_mall_kiosk">Shopping Mall Kiosk</option>
+                                    <option value="airport_food_court">Airport Food Court</option>
+                                    <option value="university_campus_branch">University Campus Branch</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="reportedBy">Reported By</label>
+                                <input type="text" id="reportedBy" name="reportedBy" placeholder="Staff member who reported">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="wasteReason">Reason for Wastage *</label>
+                            <select id="wasteReason" name="wasteReason" required>
+                                <option value="">Select reason...</option>
+                                <option value="expired">Expired/Past Optimal Freshness</option>
+                                <option value="damaged">Damaged During Transport/Handling</option>
+                                <option value="contaminated">Contaminated/Foreign Material</option>
+                                <option value="quality_issues">Quality Issues (Texture/Taste)</option>
+                                <option value="spoiled">Spoiled/Off Odor</option>
+                                <option value="production_error">Production Error/Defect</option>
+                                <option value="filling_leak">PAU Filling Leakage</option>
+                                <option value="overproduction">Overproduction/Unsold</option>
+                                <option value="equipment_failure">Equipment Failure Impact</option>
+                                <option value="customer_return">Customer Return/Complaint</option>
+                                <option value="other">Other (Specify Below)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="customReasonGroup" style="display: none;">
+                            <label for="customReason">Custom Reason *</label>
+                            <input type="text" id="customReason" name="customReason" placeholder="Please specify the reason">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="notes">Additional Notes</label>
+                            <textarea id="notes" name="notes" rows="3" placeholder="Optional additional details about the wastage..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" onclick="resetForm()" class="reset-btn">Reset</button>
+                            <button type="submit" class="submit-btn" id="submitBtn">Log Factory Wastage</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Stock Info -->
+                <div id="stockInfo" class="stock-info" style="display: none;">
+                    <div class="stock-details">
+                        <h4>Current Stock Information</h4>
+                        <div class="stock-row">
+                            <span>Current Stock:</span>
+                            <span id="currentStock">-</span>
+                        </div>
+                        <div class="stock-row">
+                            <span>After Wastage:</span>
+                            <span id="afterStock" class="highlight">-</span>
+                        </div>
+                        <div class="stock-row" id="valueRow" style="display: none;">
+                            <span>Estimated Value Lost:</span>
+                            <span id="valueLost" class="warning-text">-</span>
+                        </div>
+                        <div class="stock-row" id="warningRow" style="display: none;">
+                            <span class="warning-text">⚠️ Warning:</span>
+                            <span id="warningText" class="warning-text">-</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Wastage History -->
+            <section class="history-section">
+                <div class="section-header">
+                    <h2>📋 Wastage History & Analysis</h2>
+                    <div class="history-filters">
+                        <select id="filterDate" onchange="filterHistory()" class="filter-select">
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="all">All Entries</option>
+                        </select>
+                        <select id="filterLocation" onchange="filterHistory()" class="filter-select">
+                            <option value="">All Locations</option>
+                            <option value="factory">Factory Only</option>
+                            <option value="outlet">Outlets Only</option>
+                        </select>
+                        <select id="filterReason" onchange="filterHistory()" class="filter-select">
+                            <option value="">All Reasons</option>
+                            <option value="expired">Expired</option>
+                            <option value="damaged">Damaged</option>
+                            <option value="contaminated">Contaminated</option>
+                            <option value="quality_issues">Quality Issues</option>
+                            <option value="spoiled">Spoiled</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="history-table-container">
+                    <table class="history-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Location</th>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Reason</th>
+                                <th>Value Lost</th>
+                                <th>Logged By</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- Dynamic content will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚠️ Confirm Wastage Entry</h3>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-details">
+                    <h4>Wastage Details:</h4>
+                    <div id="confirmationText"></div>
+                    <div class="stock-impact">
+                        <h4>Impact:</h4>
+                        <div id="stockImpactText"></div>
+                    </div>
+                    <div class="warning-notice">
+                        <p><strong>⚠️ Important:</strong> This action will permanently reduce inventory levels and cannot be undone.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button onclick="closeConfirmModal()" class="cancel-btn">Cancel</button>
+                <button onclick="confirmWastage()" class="confirm-btn">Confirm Wastage</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="wastage-logging.js"></script>
+</body>
+</html>

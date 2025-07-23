@@ -4,10 +4,84 @@ let filteredIngredients = [];
 let currentEditingId = null;
 let deleteIngredientId = null;
 let originalEditData = null; // Store original data for reset functionality
+let currentUser = null; // Store current user session
+
+// Authentication functions
+function getUserSession() {
+    const sessionData = sessionStorage.getItem('userSession') || localStorage.getItem('userSession');
+    return sessionData ? JSON.parse(sessionData) : null;
+}
+
+function clearUserSession() {
+    sessionStorage.removeItem('userSession');
+    localStorage.removeItem('userSession');
+}
+
+function checkAuthentication() {
+    const session = getUserSession();
+    if (!session) {
+        // No valid session, redirect to login
+        window.location.href = 'login.html';
+        return false;
+    }
+    
+    currentUser = session;
+    updateUserInterface();
+    return true;
+}
+
+function updateUserInterface() {
+    if (currentUser) {
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const userRoleBadge = document.getElementById('userRoleBadge');
+        
+        if (welcomeMessage) {
+            // Show role-based welcome message
+            let displayName = 'User';
+            
+            // If we have a proper name, use it, otherwise use the role
+            if (currentUser.name && currentUser.name.trim() && currentUser.name !== 'undefined') {
+                displayName = currentUser.name;
+            } else if (currentUser.role === 'supervisor') {
+                displayName = 'Supervisor';
+            } else if (currentUser.role === 'admin') {
+                displayName = 'Admin';
+            } else {
+                displayName = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+            }
+            
+            welcomeMessage.textContent = `Welcome, ${displayName}!`;
+        }
+        
+        if (userRoleBadge) {
+            userRoleBadge.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+            userRoleBadge.className = `role-badge ${currentUser.role}`;
+        }
+    }
+}
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication first
+    if (!checkAuthentication()) {
+        return; // Will redirect to login
+    }
+    
     initializeApp();
+    
+    // Setup logout button
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                clearUserSession();
+                showNotification('Logged out successfully!', 'info');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1000);
+            }
+        });
+    }
 });
 
 async function initializeApp() {
@@ -27,16 +101,25 @@ async function initializeApp() {
 // Fetch ingredients from API
 async function fetchIngredients() {
     try {
+        console.log('Fetching ingredients from API...');
         const response = await fetch('/ingredients');
+        console.log('Response status:', response.status);
+        
         if (!response.ok) {
-            throw new Error('Failed to fetch ingredients');
+            throw new Error(`Failed to fetch ingredients: ${response.status}`);
         }
-        allIngredients = await response.json();
+        
+        const data = await response.json();
+        console.log('Received data:', data);
+        
+        allIngredients = data;
         filteredIngredients = [...allIngredients];
+        
+        console.log('Total ingredients loaded:', allIngredients.length);
         renderIngredientsTable();
     } catch (error) {
         console.error('Error fetching ingredients:', error);
-        showNotification('Error loading ingredients', 'error');
+        showNotification('Error loading ingredients: ' + error.message, 'error');
     }
 }
 
@@ -83,7 +166,7 @@ async function addIngredient(ingredientData) {
         showNotification('Ingredient added successfully!', 'success');
         await fetchIngredients();
         updateStats();
-        resetForm();
+        clearFormSilently();
         toggleFormSection();
         // Clear original edit data
         originalEditData = null;
@@ -111,7 +194,7 @@ async function updateIngredient(id, ingredientData) {
         showNotification('Ingredient updated successfully!', 'success');
         await fetchIngredients();
         updateStats();
-        resetForm();
+        clearFormSilently();
         toggleFormSection();
         // Clear original edit data
         originalEditData = null;
@@ -152,40 +235,61 @@ async function deleteIngredient(id) {
 // Form submission handler
 function setupEventListeners() {
     const form = document.getElementById('ingredientForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const formData = new FormData(form);
-        const ingredientData = {
-            name: formData.get('ingredientName'),
-            category: formData.get('ingredientCategory'),
-            quantity: parseFloat(formData.get('quantity')),
-            stock: parseFloat(formData.get('stock')),
-            supplier: formData.get('supplier'),
-            expirydate: formData.get('expiryDate'),
-            location: formData.get('storageLocation')
-        };
-        
-        // Calculate status automatically
-        ingredientData.status = calculateStatus(ingredientData.quantity, ingredientData.stock, ingredientData.expirydate);
-        
-        // Validate required fields
-        if (!ingredientData.name || !ingredientData.category || 
-            !ingredientData.quantity || !ingredientData.stock || 
-            !ingredientData.supplier || !ingredientData.expirydate || 
-            !ingredientData.location) {
-            showNotification('Please fill in all required fields', 'error');
+        // Prevent multiple submissions
+        if (submitBtn.disabled) {
             return;
         }
         
-        const editingId = document.getElementById('editingId').value;
+        // Disable submit button during processing
+        submitBtn.disabled = true;
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Processing...';
         
-        if (editingId) {
-            // Update existing ingredient
-            await updateIngredient(editingId, ingredientData);
-        } else {
-            // Add new ingredient
-            await addIngredient(ingredientData);
+        try {
+            const formData = new FormData(form);
+            const ingredientData = {
+                name: formData.get('ingredientName'),
+                category: formData.get('ingredientCategory'),
+                quantity: parseFloat(formData.get('quantity')),
+                stock: parseFloat(formData.get('stock')),
+                supplier: formData.get('supplier'),
+                expirydate: formData.get('expiryDate'),
+                location: formData.get('storageLocation')
+            };
+            
+            // Calculate status automatically
+            ingredientData.status = calculateStatus(ingredientData.quantity, ingredientData.stock, ingredientData.expirydate);
+            
+            // Validate required fields
+            if (!ingredientData.name || !ingredientData.category || 
+                !ingredientData.quantity || !ingredientData.stock || 
+                !ingredientData.supplier || !ingredientData.expirydate || 
+                !ingredientData.location) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const editingId = document.getElementById('editingId').value;
+            
+            if (editingId) {
+                // Update existing ingredient
+                await updateIngredient(editingId, ingredientData);
+            } else {
+                // Add new ingredient
+                await addIngredient(ingredientData);
+            }
+        } catch (error) {
+            console.error('Form submission error:', error);
+            showNotification('An error occurred while processing your request', 'error');
+        } finally {
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
         }
     });
     
@@ -475,18 +579,36 @@ function toggleFormSection() {
         formSection.style.display = 'block';
         toggleBtn.textContent = 'Close Form';
         addBtn.textContent = '📝 Form Open';
-        resetForm();
+        clearFormSilently();
     } else {
         formSection.style.display = 'none';
         toggleBtn.textContent = 'Show Form';
         addBtn.textContent = '➕ Add Ingredient';
-        resetForm();
-        // Clear original edit data when closing form
+        clearFormSilently();
         originalEditData = null;
     }
 }
 
-// Reset form
+// Clear form silently
+function clearFormSilently() {
+    const form = document.getElementById('ingredientForm');
+    form.reset();
+    document.getElementById('editingId').value = '';
+    document.getElementById('formTitle').textContent = '➕ Add New Ingredient';
+    document.getElementById('submitBtn').textContent = 'Add Ingredient';
+    document.getElementById('resetBtn').textContent = 'Reset';
+    
+    // Reset status display
+    const statusDisplay = document.getElementById('statusDisplay');
+    statusDisplay.value = 'Enter details to calculate status';
+    statusDisplay.style.backgroundColor = '#f8f9fa';
+    statusDisplay.style.color = '#6c757d';
+    
+    // Clear original edit data
+    originalEditData = null;
+}
+
+// Reset form (with notifications when user clicks reset button)
 function resetForm() {
     const editingId = document.getElementById('editingId').value;
     
@@ -496,23 +618,12 @@ function resetForm() {
         showNotification('Form reset to original values', 'info');
     } else {
         // In add mode - clear form completely
-        const form = document.getElementById('ingredientForm');
-        form.reset();
-        document.getElementById('editingId').value = '';
-        document.getElementById('formTitle').textContent = '➕ Add New Ingredient';
-        document.getElementById('submitBtn').textContent = 'Add Ingredient';
-        document.getElementById('resetBtn').textContent = 'Reset';
-        
-        // Reset status display
-        const statusDisplay = document.getElementById('statusDisplay');
-        statusDisplay.value = 'Enter details to calculate status';
-        statusDisplay.style.backgroundColor = '#f8f9fa';
-        statusDisplay.style.color = '#6c757d';
-        
-        // Clear original edit data
-        originalEditData = null;
-        
-        showNotification('Form cleared', 'info');
+        clearFormSilently();
+        // Only show notification if user is actually in add mode and clicking reset
+        // (not when form is being initialized)
+        if (document.getElementById('ingredientFormSection').style.display === 'block') {
+            showNotification('Form cleared', 'info');
+        }
     }
 }
 
@@ -521,7 +632,6 @@ function filterIngredients() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const supplierFilter = document.getElementById('supplierFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
-    const unitFilter = document.getElementById('unitFilter').value;
     
     filteredIngredients = allIngredients.filter(ingredient => {
         const matchesSearch = !searchTerm || 
@@ -543,7 +653,6 @@ function clearFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('supplierFilter').value = '';
     document.getElementById('statusFilter').value = '';
-    document.getElementById('unitFilter').value = '';
     
     filteredIngredients = [...allIngredients];
     renderIngredientsTable();
@@ -681,17 +790,16 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Navigation functions (placeholder)
+// Navigation functions
 function goBackToDashboard() {
-    // Implement navigation to dashboard
-    console.log('Navigate back to dashboard');
+    // Navigate based on user role
+    if (currentUser && currentUser.role === 'supervisor') {
+        window.location.href = 'supervisor-dashboard.html';
+    } else {
+        // For staff, just refresh the current page
+        window.location.reload();
+    }
 }
-
-// Logout function (placeholder)
-document.getElementById('logoutBtn').addEventListener('click', function() {
-    // Implement logout functionality
-    console.log('Logout clicked');
-});
 
 // Close modal when clicking outside
 window.addEventListener('click', function(event) {

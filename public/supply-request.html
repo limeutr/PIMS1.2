@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAU Inventory - Supply Request</title>
+    <link rel="stylesheet" href="supply-request.css">
+</head>
+<body>
+    <div class="request-container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo" onclick="goBackToDashboard()" style="cursor: pointer;" title="Return to Dashboard">
+                    <h1>PAU Inventory</h1>
+                    <span>Supply Request</span>
+                </div>
+                <div class="user-info">
+                    <span class="role-badge" id="userRoleBadge">User</span>
+                    <span id="welcomeMessage">Welcome, User!</span>
+                    <button onclick="goBackToDashboard()" class="back-btn">Back to Dashboard</button>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Controls Section -->
+            <section class="controls-section">
+                <div class="controls-header">
+                    <h2>📋 Supply Request Management</h2>
+                    <div class="controls-actions">
+                        <button onclick="openNewRequestModal()" class="add-btn">
+                            <span class="btn-icon">➕</span>
+                            New Request
+                        </button>
+                        <button onclick="viewAllRequests()" class="admin-btn" id="viewAllBtn">
+                            <span class="btn-icon">📋</span>
+                            All Requests
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-filter-section">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search requests..." onkeyup="searchRequests()">
+                        <button onclick="searchRequests()" class="search-btn">🔍</button>
+                    </div>
+                    <div class="filter-controls">
+                        <select id="statusFilter" onchange="filterRequests()">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                        <select id="priorityFilter" onchange="filterRequests()">
+                            <option value="">All Priority</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                        <input type="date" id="dateFilter" onchange="filterRequests()">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card pending">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-info">
+                            <h3>Pending</h3>
+                            <p class="stat-number" id="pendingCount">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card approved">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3>Approved</h3>
+                            <p class="stat-number" id="approvedCount">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card total">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-info">
+                            <h3>Total Requests</h3>
+                            <p class="stat-number" id="totalCount">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card urgent">
+                        <div class="stat-icon">🚨</div>
+                        <div class="stat-info">
+                            <h3>Urgent</h3>
+                            <p class="stat-number" id="urgentCount">0</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Requests Table Section -->
+            <section class="table-section">
+                <div class="table-container">
+                    <table class="requests-table">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Item Name</th>
+                                <th>Quantity</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Requested By</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody">
+                            <!-- Requests will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- New Request Modal -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">New Supply Request</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="requestForm">
+                <div class="form-group">
+                    <label for="itemName">Item Name *</label>
+                    <input type="text" id="itemName" name="itemName" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="raw_ingredient">Raw Ingredient</option>
+                        <option value="filling">PAU Filling</option>
+                        <option value="packaging">Packaging Materials</option>
+                        <option value="equipment">Kitchen Equipment</option>
+                        <option value="supplies">General Supplies</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quantity">Quantity *</label>
+                        <input type="number" id="quantity" name="quantity" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="unit">Unit</label>
+                        <select id="unit" name="unit" required>
+                            <option value="kg">Kilograms (kg)</option>
+                            <option value="g">Grams (g)</option>
+                            <option value="L">Liters (L)</option>
+                            <option value="ml">Milliliters (ml)</option>
+                            <option value="pcs">Pieces (pcs)</option>
+                            <option value="boxes">Boxes</option>
+                            <option value="bags">Bags</option>
+                            <option value="bottles">Bottles</option>
+                            <option value="containers">Containers</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="priority">Priority *</label>
+                    <select id="priority" name="priority" required>
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="neededBy">Needed By</label>
+                    <input type="date" id="neededBy" name="neededBy">
+                </div>
+                <div class="form-group">
+                    <label for="justification">Justification/Reason *</label>
+                    <textarea id="justification" name="justification" rows="4" placeholder="Explain why this supply is needed..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="preferredSupplier">Preferred Supplier</label>
+                    <select id="preferredSupplier" name="preferredSupplier">
+                        <option value="">Select Supplier (Optional)</option>
+                        <option value="Golden Wheat Co.">Golden Wheat Co.</option>
+                        <option value="Sweet Supply Ltd.">Sweet Supply Ltd.</option>
+                        <option value="Filling Co.">Filling Co.</option>
+                        <option value="Other">Other (Specify in justification)</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal()" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="submit-btn">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Request Details Modal -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Request Details</h3>
+                <span class="close" onclick="closeViewModal()">&times;</span>
+            </div>
+            <div id="requestDetails" class="request-details">
+                <!-- Details will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeViewModal()" class="cancel-btn">Close</button>
+                <div id="adminActions" style="display: none;">
+                    <button onclick="approveRequest()" class="approve-btn">Approve</button>
+                    <button onclick="rejectRequest()" class="reject-btn">Reject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeConfirmModal()" class="cancel-btn">Cancel</button>
+                <button id="confirmBtn" class="confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="supply-request.js"></script>
+</body>
+</html>
